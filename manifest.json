@@ -1,0 +1,26 @@
+{
+    "manifest_version": 3,
+    "name": "Youtube Extended Edition",
+    "description": "Adds Much Needed Features to Youtube",
+    "version": "1.0",
+    "action": {
+      "default_icon": "hello_extensions.png"
+    },
+    "permissions": [
+      "tabs", "activeTab"
+    ],
+    "host_permissions": [
+      "*://*.googleapis.com/*"
+    ],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "commands": {
+      "_execute_action": {
+        "suggested_key": {
+          "default": "Ctrl+B",
+          "mac": "Command+B"
+        }
+      }
+    }
+  }
