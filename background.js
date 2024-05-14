@@ -1,28 +1,61 @@
+const API_KEY = 'AIzaSyCokn3AF2CoXMfRIlcJDrm8klYgVpeH_po';
 
 chrome.action.onClicked.addListener(async (tab) => {
     
-    const videoPattern = /^https:\/\/www\.youtube\.com\/watch\?v=/;
+    const VIDEO_PATTERN = /^https:\/\/www\.youtube\.com\/watch\?v=/;
 
-    if(videoPattern.test(tab.url)){
+    if(VIDEO_PATTERN.test(tab.url)){
         console.log("This is a youtube video");
 
-        const VIDEO_ID = tab.url.substring(tab.url.indexOf('=') + 1);
-        console.log(VIDEO_ID);
+        const videoId = tab.url.substring(tab.url.indexOf('=') + 1);
+        console.log(videoId);
 
-        const CHANNEL_ID = async (videoID) => {
-            const apiKey = 'AIzaSyCokn3AF2CoXMfRIlcJDrm8klYgVpeH_po';
-            const myURL = `https://www.googleapis.com/youtube/v3/videos?key=${apiKey}&part=snippet&id=${videoID}`;
+        const channelId = await getChannelID(videoId);
+        console.log(channelId);
 
-            try {
-                const response = await fetch(myURL);
-                const data = await response.json();
-                return data.items[0].snippet.channelId;
-            } catch (err) {
-                console.error(err);
-            }
-        };
-        console.log(CHANNEL_ID(VIDEO_ID));
+        const playlists = await getPlaylists(channelId);
+        console.log(playlists.length);
+        
     } else {
         console.log("This is not a youtube video");
     }
 });
+
+async function getChannelID(videoId) {
+  
+    const myUrl = `https://www.googleapis.com/youtube/v3/videos?key=${API_KEY}&part=snippet&id=${videoId}`;
+    try {
+        const response = await fetch(myUrl);
+        const data = await response.json();
+        return data.items[0].snippet.channelId;
+    } catch (err) {
+        console.error('Failed to fetch channel ID', err);
+        return null;
+    }
+}
+
+async function getPlaylists(channelId){
+    let pageToken = null;
+    let playlists = [];
+
+    do {
+        let myUrl = `https://www.googleapis.com/youtube/v3/playlists?key=${API_KEY}&part=snippet&channelId=${channelId}&maxResults=50`
+
+        if (pageToken) {
+            myUrl += `&pageToken=${pageToken}`;
+        }
+
+        try {
+            const response = await fetch(myUrl);
+            const data = await response.json();
+            console.log(data);
+            playlists = playlists.concat(data.items);
+            pageToken = data.nextPageToken;
+        } catch (err) {
+            console.error('Failed to fetch playlists', err);  
+            break;
+        }
+    } while (pageToken);
+
+    return playlists;
+}
