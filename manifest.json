@@ -7,10 +7,7 @@
       "default_icon": "hello_extensions.png"
     },
     "permissions": [
-      "tabs", "activeTab"
-    ],
-    "host_permissions": [
-      "*://*.googleapis.com/*"
+      "tabs", "activeTab", "storage" 
     ],
     "background": {
       "service_worker": "background.js"
