@@ -15,6 +15,12 @@ chrome.action.onClicked.addListener(async (tab) => {
 
         const playlists = await getPlaylists(channelId);
         console.log(playlists.length);
+
+        for(playlist of playlists){
+
+            const [found, index] = await isVideoInPlaylist(playlist['id'], videoId);
+            if(found) console.log('video found in playlist ' + playlist['id']);
+        }
         
     } else {
         console.log("This is not a youtube video");
@@ -44,11 +50,9 @@ async function getPlaylists(channelId){
         if (pageToken) {
             myUrl += `&pageToken=${pageToken}`;
         }
-
         try {
             const response = await fetch(myUrl);
             const data = await response.json();
-            console.log(data);
             playlists = playlists.concat(data.items);
             pageToken = data.nextPageToken;
         } catch (err) {
@@ -58,4 +62,38 @@ async function getPlaylists(channelId){
     } while (pageToken);
 
     return playlists;
+}
+
+async function isVideoInPlaylist(playlistId, vidId){
+    let pageToken = null;
+    let index = 1;
+
+    do {
+        let myUrl = `https://youtube.googleapis.com/youtube/v3/playlistItems?key=${API_KEY}&part=snippet&playlistId=${playlistId}`;
+
+        if (pageToken) {
+            myUrl +=  `&pageToken=${pageToken}`;
+        }
+
+        try {
+            const response = await fetch(myUrl);
+            const data = await response.json();
+
+            for (item of data.items) {
+                console.log(item);
+                if(item.snippet.resourceId.videoId === vidId) {
+                    return [true, index];
+                }
+                index += 1
+            }
+
+            pageToken = data.nextPageToken;
+        } catch (err) {
+            console.error('Failed to fetch playlist', err);  
+            break;
+        }
+    
+    } while (pageToken);
+
+    return [false, null];
 }
