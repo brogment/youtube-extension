@@ -7,7 +7,8 @@ chrome.action.onClicked.addListener(async (tab) => {
     if(VIDEO_PATTERN.test(tab.url)){
         console.log("This is a youtube video");
 
-        const videoId = tab.url.substring(tab.url.indexOf('=') + 1);
+        const urlParams = new URLSearchParams(new URL(tab.url).search);
+        const videoId = urlParams.get('v');
         console.log(videoId);
 
         const channelId = await getChannelID(videoId);
@@ -16,11 +17,21 @@ chrome.action.onClicked.addListener(async (tab) => {
         const playlists = await getPlaylists(channelId);
         console.log(playlists.length);
 
-        for(playlist of playlists){
-
-            const [found, index] = await isVideoInPlaylist(playlist['id'], videoId);
-            if(found) console.log('video found in playlist ' + playlist['id']);
-        }
+        for(const playlist of playlists){
+            const playlistId = playlist['id'];
+            const [found, index] = await isVideoInPlaylist(playlistId, videoId);
+            if(found){
+                const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+                const playlistUrl = `https://www.youtube.com/playlist?list=${playlistId}`;
+                const combinedUrl = `${videoUrl}&list=${playlistId}&index=${index}`;
+                console.log(`Video URL: ${videoUrl}`);
+                console.log(`Playlist URL: ${playlistUrl}`);
+                console.log(`Direct link to video in playlist ${combinedUrl}`);
+                chrome.tabs.create({
+                    url: playlistUrl
+                });
+            } 
+        }  
         
     } else {
         console.log("This is not a youtube video");
@@ -74,26 +85,21 @@ async function isVideoInPlaylist(playlistId, vidId){
         if (pageToken) {
             myUrl +=  `&pageToken=${pageToken}`;
         }
-
         try {
             const response = await fetch(myUrl);
             const data = await response.json();
-
-            for (item of data.items) {
-                console.log(item);
+            // can speed up by putting vidId directly in url and seeing if search returns true, but lose index ability?
+            for (const item of data.items) {
                 if(item.snippet.resourceId.videoId === vidId) {
                     return [true, index];
                 }
                 index += 1
             }
-
             pageToken = data.nextPageToken;
         } catch (err) {
             console.error('Failed to fetch playlist', err);  
             break;
         }
-    
     } while (pageToken);
-
     return [false, null];
 }
