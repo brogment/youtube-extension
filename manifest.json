@@ -4,7 +4,7 @@
     "description": "Adds Much Needed Features to Youtube",
     "version": "1.0",
     "action": {
-      "default_icon": "hello_extensions.png"
+      "default_icon": "img/icon16.png"
     },
     "permissions": [
       "tabs", "activeTab", "storage" 
@@ -19,5 +19,14 @@
           "mac": "Command+B"
         }
       }
+    },
+    "icons": {
+      "16": "img/icon16.png",
+      "19": "img/icon19.png",
+      "32": "img/icon32.png",
+      "38": "img/icon38.png",
+      "48": "img/icon48.png",
+      "128": "img/icon128.png"
     }
+  
   }
